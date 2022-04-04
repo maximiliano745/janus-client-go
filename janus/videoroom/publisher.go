@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/abdularis/janus-client-go/janus"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 // PublisherResp returned when "joined", "event" (with publishers field)
@@ -214,7 +214,7 @@ func (p *Publisher) Publish(sdpOffer string, config PublisherPublishConfig) (str
 	}
 
 	if resp.JSEP == nil {
-		log.Debug("videoroom:publish jsep nil")
+		log.Debug().Msg("videoroom:publish jsep nil")
 		return "", errors.New("unexpected response: return nil jsep")
 	}
 
@@ -244,7 +244,7 @@ func (p *Publisher) Configure(sdpOffer string) (string, error) {
 	}
 
 	if resp.JSEP == nil {
-		log.Debug("videoroom:configure jsep nil")
+		log.Debug().Msg("videoroom:configure jsep nil")
 		return "", errors.New("unexpected response: return nil jsep")
 	}
 	return resp.JSEP.Sdp, nil

@@ -1,7 +1,7 @@
 package janus
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 	"sync"
 )
 
@@ -15,14 +15,14 @@ type Session struct {
 	destroyHook func(sessionID int64)
 	gateway     *Gateway
 	isValid     bool
-	logger      *log.Entry
+	logger      zerolog.Logger
 }
 
 func (s *Session) passMsg(msg interface{}) {
 	switch msg.(type) {
 	case *TimeoutMsg:
 		// note: maybe check in gateway or call hook to remove this invalid session
-		s.logger.Info("timeout, invalidate session")
+		s.logger.Info().Msg("timeout, invalidate session")
 		s.setIsValid(false)
 	}
 	s.events.publish(msg)
@@ -98,7 +98,7 @@ func (s *Session) Attach(pluginPackage string) (*Handle, error) {
 			events:    newChanBroadcast(),
 			gateway:   s.gateway,
 			isValid:   true,
-			logger:    s.logger.WithField("handle", resp.Data.ID),
+			logger:    s.logger.With().Int64("handle", resp.Data.ID).Logger(),
 			detachHook: func(handleID int64) {
 				s.removeHandle(handleID)
 			},
@@ -155,7 +155,7 @@ func (s *Session) claim() error {
 	case *ErrorMsg:
 		if resp.Err.Code == 458 {
 			s.setIsValid(false)
-			s.logger.WithError(resp).Debug("invalidate session")
+			s.logger.Debug().Err(resp).Msg("claim failed, invalidate session")
 		}
 		return resp
 	default:

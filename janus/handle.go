@@ -1,7 +1,7 @@
 package janus
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 )
 
 // Handle represent instance to plugin within a session
@@ -13,7 +13,7 @@ type Handle struct {
 	detachHook func(handleID int64)
 	gateway    *Gateway
 	isValid    bool
-	logger     *log.Entry
+	logger     zerolog.Logger
 }
 
 func (h *Handle) passMsg(msg interface{}) {
@@ -120,7 +120,7 @@ func (h *Handle) Trickle(candidates ...IceCandidate) error {
 
 	switch resp := resp.(type) {
 	case *AckMsg:
-		h.logger.Info("send trickle ok")
+		h.logger.Debug().Msg("send trickle ok")
 		return nil
 	case *ErrorMsg:
 		return resp

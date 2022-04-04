@@ -9,7 +9,7 @@ import (
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/pion/webrtc/v3/pkg/media/ivfreader"
 	"github.com/pion/webrtc/v3/pkg/media/oggreader"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"io"
 	"os"
 	"time"
@@ -128,7 +128,6 @@ func (w *LocalWebRTCAgent) Start(publisher *videoroom.Publisher, roomID int64) {
 	}
 
 	if haveAudioFile {
-		log.Println("add audio file track")
 		// Create a audio track
 		audioTrack, audioTrackErr := webrtc.NewTrackLocalStaticSample(webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus}, "audio", "pion")
 		if audioTrackErr != nil {
@@ -247,23 +246,23 @@ func (w *LocalWebRTCAgent) Start(publisher *videoroom.Publisher, roomID int64) {
 	// -- nego nego
 	offer, err := peerConnection.CreateOffer(nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	err = peerConnection.SetLocalDescription(offer)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	err = publisher.Join(nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	localSdp := peerConnection.LocalDescription()
 	answerSdp, err := publisher.Publish(localSdp.SDP, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	readyToSendIce = true
@@ -284,7 +283,7 @@ func (w *LocalWebRTCAgent) Start(publisher *videoroom.Publisher, roomID int64) {
 	}
 	err = peerConnection.SetRemoteDescription(answer)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	// Block until ICE Gathering is complete, disabling trickle ICE

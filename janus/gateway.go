@@ -1,13 +1,15 @@
 package janus
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
-	log "github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -28,10 +30,12 @@ const (
 	Reconnecting
 )
 
-var isDebug = false
+var isVerbose = false
 
-func SetDebug(debug bool) {
-	isDebug = debug
+// SetVerboseRequestResponse if enabled set to true
+// will log in debug level raw request response (and event) payload to and from janus
+func SetVerboseRequestResponse(enabled bool) {
+	isVerbose = enabled
 }
 
 // Gateway represent connection to janus server
@@ -47,7 +51,7 @@ type Gateway struct {
 	reqTransactions     map[string]chan interface{}
 	closeWsFunc         context.CancelFunc
 	reconnectCancelFunc context.CancelFunc
-	logger              *log.Entry
+	logger              zerolog.Logger
 }
 
 func generateRequestTransactionID() string {
@@ -69,7 +73,7 @@ func Connect(janusUrl string) (*Gateway, error) {
 		janusUrl:        janusUrl,
 		sessions:        make(map[int64]*Session),
 		reqTransactions: make(map[string]chan interface{}),
-		logger:          log.WithField("host", u.Host),
+		logger:          log.With().Str("host", u.Host).Logger(),
 	}
 	if err = g.connectWs(); err != nil {
 		return nil, err
@@ -104,20 +108,20 @@ func (g *Gateway) ReconnectWs(ctx context.Context) {
 
 	delayTime := time.Duration(2)
 	for {
-		g.logger.Infof("reconnect ws in %ds", delayTime)
+		g.logger.Info().Msgf("reconnect ws in %ds", delayTime)
 		t := time.NewTimer(time.Second * delayTime)
 		select {
 		case <-ctx.Done():
-			g.logger.Info("reconnect cancelled")
+			g.logger.Info().Msg("reconnect cancelled")
 			return
 		case <-t.C:
 			err := g.connectWs()
 			if err != nil {
-				g.logger.WithError(err).Info("reconnect error")
+				g.logger.Info().Err(err).Msg("reconnect error")
 				delayTime = (delayTime * 2) + time.Duration(rand.Intn(5))
 				continue
 			}
-			g.logger.Info("reconnect success")
+			g.logger.Info().Msg("reconnect success")
 			g.reconnectCancelFunc = nil
 			g.reclaimSessions()
 			return
@@ -137,7 +141,7 @@ func (g *Gateway) reclaimSessions() {
 		}
 	}
 
-	g.logger.Infof("reclaim sessions: invalid(%d) reclaimed(%d)", invalidCount, len(g.sessions))
+	g.logger.Info().Msgf("reclaim sessions: invalid(%d) reclaimed(%d)", invalidCount, len(g.sessions))
 }
 
 func (g *Gateway) invalidateSessions() {
@@ -174,7 +178,7 @@ func (g *Gateway) Create() (*Session, error) {
 			events:  newChanBroadcast(),
 			handles: make(map[int64]*Handle),
 			gateway: g,
-			logger:  g.logger.WithField("session", resp.Data.ID),
+			logger:  g.logger.With().Int64("session", resp.Data.ID).Logger(),
 			isValid: true,
 			destroyHook: func(sessionID int64) {
 				g.deleteSession(sessionID)
@@ -247,9 +251,13 @@ func (g *Gateway) sendSync(body map[string]interface{}, waitForEventMsg bool) (i
 		return nil, err
 	}
 
-	if isDebug {
-		debugData, _ := json.MarshalIndent(body, "", "    ")
-		fmt.Printf("[DEBUG][%s] 🍎 --> send, raw: %s\n", g.janusUrl, debugData)
+	if isVerbose {
+		indented := bytes.NewBuffer(nil)
+		_ = json.Indent(indented, data, "", "    ")
+		log.Debug().
+			Str("host", g.URL()).
+			RawJSON("raw", indented.Bytes()).
+			Msg("--> send 🍎")
 	}
 
 	responseCh := make(chan interface{})
@@ -310,15 +318,15 @@ func (g *Gateway) ping(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			g.logger.Info("ping close")
+			g.logger.Info().Msg("ping close")
 			return
 		case <-ticker.C:
-			g.logger.Info("ping janus")
+			g.logger.Info().Msg("ping janus")
 			g.connMtx.Lock()
 			err := g.conn.WriteControl(websocket.PingMessage, []byte("-ping-"), time.Now().Add(20*time.Second))
 			g.connMtx.Unlock()
 			if err != nil {
-				g.logger.WithError(err).Error("ping error")
+				g.logger.Error().Err(err).Msg("ping error")
 				return
 			}
 		}
@@ -360,7 +368,7 @@ func (g *Gateway) receive() {
 			g.invalidateSessions()
 
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
-				g.logger.WithError(err).Info("close normally")
+				g.logger.Info().Err(err).Msg("close normally")
 				return
 			}
 
@@ -378,21 +386,24 @@ func (g *Gateway) receive() {
 			continue
 		}
 
-		if isDebug {
-			fmt.Printf("[DEBUG][%s] 🍏 <-- recv, raw: %s\n", g.janusUrl, data)
+		if isVerbose {
+			log.Debug().
+				Str("host", g.URL()).
+				RawJSON("response", data).
+				Msg("<-- recv 🍏")
 		}
 
 		typeFunc, ok := msgTypesMapper[baseMsg.Janus]
 		if !ok {
-			g.logger.
-				WithField("msg", baseMsg).
-				Errorf("invalid janus message type received: %s", baseMsg.Janus)
+			g.logger.Error().
+				Interface("msg", baseMsg).
+				Msgf("invalid janus message type received: %s", baseMsg.Janus)
 			continue
 		}
 
 		msg := typeFunc()
 		if err := json.Unmarshal(data, msg); err != nil {
-			g.logger.WithError(err).Debugf("error unmarshall to specific message type")
+			g.logger.Debug().Err(err).Msg("error unmarshall to specific message type")
 			continue
 		}
 

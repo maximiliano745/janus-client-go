@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/abdularis/janus-client-go/janus"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type StreamInfoReq struct {
@@ -123,12 +123,12 @@ func (s *Subscriber) Join(streams ...StreamInfoReq) ([]StreamInfoResp, string, e
 	}
 
 	if pluginData.VideoRoom != "attached" {
-		log.Debug("videoroom:join (subscriber) unexpected response event")
+		log.Debug().Msg("videoroom:join (subscriber) unexpected response event")
 		return nil, "", fmt.Errorf("unexpected response: videoroom %s", pluginData.VideoRoom)
 	}
 
 	if resp.JSEP == nil {
-		log.Debug("videoroom:join (subscriber) jsep nil")
+		log.Debug().Msg("videoroom:join (subscriber) jsep nil")
 		return nil, "", fmt.Errorf("unexpected response: jsep nil")
 	}
 
@@ -153,7 +153,7 @@ func (s *Subscriber) Start(sdpAnswer string) error {
 	}
 
 	if pluginData.GetString("started") != "ok" {
-		log.Debug("videoroom:join (subscriber) started not ok")
+		log.Debug().Msg("videoroom:join (subscriber) started not ok")
 		return errors.New("unexpected response: started != ok")
 	}
 	return nil
@@ -208,7 +208,7 @@ func (s *Subscriber) Subscribe(streams ...StreamInfoReq) ([]StreamInfoResp, stri
 	}
 
 	if pluginData.VideoRoom != "updated" {
-		log.Debug("videoroom:subscribe (subscriber) video room != updated")
+		log.Debug().Msg("videoroom:subscribe (subscriber) video room != updated")
 		return nil, "", fmt.Errorf("unexpected response: video room != updated")
 	}
 
@@ -245,7 +245,7 @@ func (s *Subscriber) Unsubscribe(streams ...UnsubscribeStreamInfoReq) ([]StreamI
 	}
 
 	if pluginData.VideoRoom != "updated" {
-		log.Debug("videoroom:unsubscribe (subscriber) video room != updated")
+		log.Debug().Msg("videoroom:unsubscribe (subscriber) video room != updated")
 		return nil, "", fmt.Errorf("unexpected response: video room != updated")
 	}
 

@@ -4,8 +4,9 @@ go 1.17
 
 require (
 	github.com/gorilla/websocket v1.4.2
+	github.com/pion/webrtc/v3 v3.1.24
+	github.com/rs/zerolog v1.26.1
 	github.com/segmentio/ksuid v1.0.4
-	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 )
 
@@ -28,7 +29,6 @@ require (
 	github.com/pion/transport v0.13.0 // indirect
 	github.com/pion/turn/v2 v2.0.8 // indirect
 	github.com/pion/udp v0.1.1 // indirect
-	github.com/pion/webrtc/v3 v3.1.24 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect

@@ -1,7 +1,7 @@
 package janus
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
 )
@@ -34,7 +34,7 @@ func (c *chanBroadcast) passMsg(ch chan interface{}, msg interface{}) {
 	case ch <- msg:
 		return
 	case <-t.C:
-		log.Info("pass msg timeout")
+		log.Info().Msg("channel broadcast pass msg timeout")
 		return
 	}
 }

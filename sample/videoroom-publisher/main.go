@@ -1,33 +1,33 @@
 package main
 
 import (
-	"context"
 	"github.com/abdularis/janus-client-go/janus"
 	"github.com/abdularis/janus-client-go/janus/videoroom"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
 func main() {
-	janus.SetDebug(true)
-	log.SetLevel(log.DebugLevel)
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	janus.SetVerboseRequestResponse(true)
 	var roomID int64 = 7555683579550993055
 
 	gateway, err := janus.Connect("ws://localhost:8188")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	_, _ = gateway.Info()
 
 	session, err := gateway.Create()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	handle, err := session.Attach(videoroom.PackageName)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	go func() {
@@ -39,7 +39,7 @@ func main() {
 
 	exists, err := videoroom.Exists(handle, roomID)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	if !exists {
@@ -48,12 +48,12 @@ func main() {
 			MaxPublishers(100)
 		err = videoroom.CreateRoom(handle, config)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal().Err(err).Msg("")
 		}
 	}
 
-	publisher := videoroom.NewPublisher(context.Background(), handle, roomID)
-
-	wrtc := NewLocalWebRTCAgent("./sample/sample-video-scenery.ogg", "./sample/sample-video-scenery.ivf")
-	wrtc.Start(publisher, roomID)
+	//publisher := videoroom.NewPublisher(context.Background(), handle, roomID)
+	//
+	//wrtc := NewLocalWebRTCAgent("./sample/sample-video-scenery.ogg", "./sample/sample-video-scenery.ivf")
+	//wrtc.Start(publisher, roomID)
 }
