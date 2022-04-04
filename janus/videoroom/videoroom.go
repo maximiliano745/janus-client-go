@@ -159,3 +159,27 @@ func ListParticipants(handle *janus.Handle, roomID int64) ([]ParticipantInfoResp
 
 	return pluginData.Participants, nil
 }
+
+func DestroyRoom(handle *janus.Handle, roomID int64, secret string, permanent bool) error {
+	req := map[string]interface{}{
+		"request":   "destroy",
+		"room":      roomID,
+		"secret":    secret,
+		"permanent": permanent,
+	}
+	resp, err := handle.Request(req)
+	if err != nil {
+		return err
+	}
+
+	pluginData := RawVideoRoomEventMsg{}
+	if err := json.Unmarshal(resp.PluginData.Data, &pluginData); err != nil {
+		return err
+	}
+
+	if pluginData.GetString("videoroom") != "destroyed" {
+		return fmt.Errorf("unexpected response while destroying room %d", roomID)
+	}
+
+	return nil
+}
