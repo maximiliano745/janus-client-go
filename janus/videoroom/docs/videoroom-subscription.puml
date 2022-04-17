@@ -1,0 +1,334 @@
+@startuml
+
+title
+Subscribe to publisher
+
+
+end title
+
+participant "Client (Publisher)" as A
+participant "Client (Subscriber)" as B
+participant "Janus WebRTC" as Janus
+
+
+note over A, Janus #lightblue
+Assume connection and session already established
+between "Client (Publisher)" and janus
+end note
+
+note over A, Janus #lightblue
+This sequence can be triggered manually
+when user first join as publisher and get list of other publishers to subscribe to
+or
+when get notified by janus that there's new publisher join the room
+end note
+
+]--> Janus: new publisher join the room
+
+Janus --> A : **async event** to notify there's new publisher joined the room
+note over Janus
+{
+   "janus": "event",
+   "session_id": 5438850526823541,
+   "sender": 3515656619306604,
+   "plugindata": {
+      "plugin": "janus.plugin.videoroom",
+      "data": {
+         "videoroom": "event",
+         "room": 1000,
+         "publishers": [
+            {
+               "id": 6536671817086148,
+               "audio_codec": "opus",
+               "video_codec": "vp8",
+               "streams": [
+                  {
+                     "type": "audio",
+                     "mindex": 0,
+                     "mid": "0",
+                     "codec": "opus"
+                  },
+                  {
+                     "type": "video",
+                     "mindex": 1,
+                     "mid": "1",
+                     "codec": "vp8"
+                  },
+                  {
+                     "type": "data",
+                     "mindex": 2,
+                     "mid": "2"
+                  }
+               ]
+            },
+            ...
+         ]
+      }
+   }
+}
+end note
+
+
+alt #lightgreen has plugin handle as subscriber
+  B -> Janus: Subscribe
+  note over B
+  {
+      "body": {
+          "request": "subscribe",
+          "streams": [
+              {
+                  "feed": 6536671817086148
+              }
+          ]
+      },
+      "handle_id": 5121120697651056,
+      "janus": "message",
+      "session_id": 5438850526823541,
+      "transaction": "27uZqmUw154HZKLD1D9PNoHwkZr"
+  }
+  end note
+  return ack
+
+  Janus --> B: **event** updated, subscribe success
+  note over Janus
+  {
+     "janus": "event",
+     "session_id": 5438850526823541,
+     "transaction": "27uZqmUw154HZKLD1D9PNoHwkZr",
+     "sender": 5121120697651056,
+     "plugindata": {
+        "plugin": "janus.plugin.videoroom",
+        "data": {
+           "videoroom": "updated",
+           "room": 1000,
+           "streams": [
+              {
+                 "type": "audio",
+                 "active": true,
+                 "mindex": 0,
+                 "mid": "0",
+                 "ready": false,
+                 "send": true,
+                 "feed_id": 6536671817086148,
+                 "feed_mid": "0",
+                 "codec": "opus"
+              },
+              {
+                 "type": "video",
+                 "active": true,
+                 "mindex": 1,
+                 "mid": "1",
+                 "ready": false,
+                 "send": true,
+                 "feed_id": 6536671817086148,
+                 "feed_mid": "1",
+                 "codec": "vp8"
+              },
+              {
+                 "type": "data",
+                 "active": true,
+                 "mindex": 2,
+                 "mid": "2",
+                 "ready": true,
+                 "send": true,
+                 "sources": 1
+              },
+              ...
+           ]
+        }
+     },
+     "jsep": {
+        "type": "offer",
+        "sdp": "..."
+     }
+  }
+  end note
+else #pink first time, video room create new subscriber
+  B -> Janus: Attach video room
+  note over B
+  {
+      "janus": "attach",
+      "plugin": "janus.plugin.videoroom",
+      "session_id": 5438850526823541,
+      "transaction": "27uZeW6V449ljSrJ3k9L4Gedz20"
+  }
+  end note
+  return success
+  note over Janus
+  {
+     "janus": "success",
+     "session_id": 5438850526823541,
+     "transaction": "27uZeW6V449ljSrJ3k9L4Gedz20",
+     "data": {
+        "id": 3515656619306604
+     }
+  }
+  end note
+
+  B -> Janus: Join as **subscriber**
+  note over B
+  Join as subscriber and immediately subscribe to
+  list of specified publisher feed
+
+  {
+      "body": {
+          "ptype": "subscriber",
+          "request": "join",
+          "room": 1000,
+          "streams": [
+              {
+                  "feed": 6471526995345164
+              },
+              ...
+          ]
+      },
+      "handle_id": 5121120697651056,
+      "janus": "message",
+      "session_id": 5438850526823541,
+      "transaction": "27uZeVvXrJKC56G6LXQNZbmQi9b"
+  }
+  end note
+  return ack
+
+  Janus --> B: **event** join subscriber success
+  note over Janus
+  {
+     "janus": "event",
+     "session_id": 5438850526823541,
+     "transaction": "27uZeVvXrJKC56G6LXQNZbmQi9b",
+     "sender": 5121120697651056,
+     "plugindata": {
+        "plugin": "janus.plugin.videoroom",
+        "data": {
+           "videoroom": "attached",
+           "room": 1000,
+           "streams": [
+              {
+                 "type": "audio",
+                 "active": true,
+                 "mindex": 0,
+                 "mid": "0",
+                 "ready": false,
+                 "send": true,
+                 "feed_id": 6471526995345164,
+                 "feed_mid": "0",
+                 "codec": "opus"
+              },
+              {
+                 "type": "video",
+                 "active": true,
+                 "mindex": 1,
+                 "mid": "1",
+                 "ready": false,
+                 "send": true,
+                 "feed_id": 6471526995345164,
+                 "feed_mid": "1",
+                 "codec": "vp8"
+              },
+              {
+                 "type": "data",
+                 "active": true,
+                 "mindex": 2,
+                 "mid": "2",
+                 "ready": false,
+                 "send": true,
+                 "sources": 1
+              }
+           ]
+        }
+     },
+     "jsep": {
+        "type": "offer",
+        "sdp": "..."
+     }
+  }
+  end note
+end
+
+'general flow'
+B -> Janus: Start subscription
+note left
+{
+    "body": {
+        "request": "start"
+    },
+    "handle_id": 5121120697651056,
+    "janus": "message",
+    "jsep": {
+        "type": "answer",
+        "sdp": "..."
+    },
+    "session_id": 5438850526823541,
+    "transaction": "27uZeYjOxNDRe2T3rwQhavSaD3v"
+},
+end note
+return ack
+
+Janus --> B: **event** request **start** success
+note right
+{
+   "janus": "event",
+   "session_id": 5438850526823541,
+   "transaction": "27uZeYjOxNDRe2T3rwQhavSaD3v",
+   "sender": 5121120697651056,
+   "plugindata": {
+      "plugin": "janus.plugin.videoroom",
+      "data": {
+         "videoroom": "event",
+         "room": 1000,
+         "started": "ok"
+      }
+   }
+}
+end note
+
+B -> Janus: trickle ice candidate
+note left
+{
+    "candidate": {
+        "sdpMid": "0",
+        "sdpMLineIndex": 0,
+        "candidate": "..."
+    },
+    "handle_id": 5121120697651056,
+    "janus": "trickle",
+    "session_id": 5438850526823541,
+    "transaction": "27uZeTYYEYqwhu0i0R8F3wLVrqx"
+},
+end note
+return ack
+
+Janus --> B: **event** webrtcup
+note right
+{
+   "janus": "webrtcup",
+   "session_id": 5438850526823541,
+   "sender": 3515656619306604
+}
+end note
+
+Janus --> B: **event** media audio available
+note right
+{
+   "janus": "media",
+   "session_id": 5438850526823541,
+   "sender": 3515656619306604,
+   "mid": "1",
+   "type": "audio",
+   "receiving": true
+}
+end note
+
+Janus --> B: **event** media video available
+note right
+{
+   "janus": "media",
+   "session_id": 5438850526823541,
+   "sender": 3515656619306604,
+   "mid": "0",
+   "type": "video",
+   "receiving": true
+}
+end note
+
+@enduml

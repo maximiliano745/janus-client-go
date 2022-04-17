@@ -1,0 +1,278 @@
+@startuml
+
+title
+Janus VideoRoom Publisher Flow
+
+
+end title
+
+participant "Client (Publisher)" as Client
+participant "Janus WebRTC" as Janus
+
+== init janus session ==
+
+Client -> Janus: Connect to Janus server using **WebSocket**
+
+Client -> Janus: Create session
+activate Janus
+note left
+{
+    "janus": "create",
+    "transaction": "27uSrK1qhjAON0iagPbRwUrquxn"
+}
+end note
+
+return Create session success
+note right
+{
+   "janus": "success",
+   "transaction": "27uSrK1qhjAON0iagPbRwUrquxn",
+   "data": {
+      "id": 2174136358864575
+   }
+}
+end note
+
+Client -> Janus: Attach to janus.plugin.videoroom
+activate Janus
+note left
+{
+    "janus": "attach",
+    "opaque_id": "client1",
+    "plugin": "janus.plugin.videoroom",
+    "session_id": 2174136358864575,
+    "transaction": "27uU24aLsCSRDPgX2nTvfGi5aFp"
+}
+end note
+
+return attach success
+note right
+{
+   "janus": "success",
+   "session_id": 2174136358864575,
+   "transaction": "27uU24aLsCSRDPgX2nTvfGi5aFp",
+   "data": {
+      "id": 6704225601631970
+   }
+}
+end note
+
+Client -> Janus: create video room
+note left
+{
+    "body": {
+        "request": "create",
+        "room": 6396358082954599993
+    },
+    "handle_id": 6704225601631970,
+    "janus": "message",
+    "session_id": 2174136358864575,
+    "transaction": "27uU1yMyUfh778OszL7rTSNyKR2"
+}
+end note
+
+return create video room success
+note right
+{
+   "janus": "success",
+   "session_id": 2174136358864575,
+   "transaction": "27uU1yMyUfh778OszL7rTSNyKR2",
+   "sender": 6704225601631970,
+   "plugindata": {
+      "plugin": "janus.plugin.videoroom",
+      "data": {
+         "videoroom": "created",
+         "room": 6396358082954599993,
+         "permanent": false
+      }
+   }
+}
+end note
+
+Client -> Janus: join to video room as "publisher"
+note left
+{
+    "body": {
+        "ptype": "publisher",
+        "request": "join",
+        "room": 6396358082954599993
+    },
+    "handle_id": 6704225601631970,
+    "janus": "message",
+    "session_id": 2174136358864575,
+    "transaction": "27uU21JkC3m5RKw8XYc9ueZlOjD"
+}
+end note
+return ack
+
+Janus --> Client: event join success
+note right
+{
+   "janus": "event",
+   "session_id": 2174136358864575,
+   "transaction": "27uU21JkC3m5RKw8XYc9ueZlOjD",
+   "sender": 6704225601631970,
+   "plugindata": {
+      "plugin": "janus.plugin.videoroom",
+      "data": {
+         "videoroom": "joined",
+         "room": 6396358082954599993,
+         "description": "Room 6396358082954599993",
+         "id": 8234592040375920,
+         "private_id": 2481026951,
+         "publishers": []
+      }
+   }
+}
+end note
+
+Client -> Janus: publish media stream request
+note left
+{
+    "body": {
+        "request": "publish"
+    },
+    "handle_id": 6704225601631970,
+    "janus": "message",
+    "jsep": {
+        "type": "offer",
+        "sdp": "..."
+    },
+    "session_id": 2174136358864575,
+    "transaction": "27uU25M7co8R155Nlom2vmYprZ3"
+},
+end note
+return ack
+
+Janus --> Client: event publish success
+note right
+{
+   "janus": "event",
+   "session_id": 2174136358864575,
+   "transaction": "27uU25M7co8R155Nlom2vmYprZ3",
+   "sender": 6704225601631970,
+   "plugindata": {
+      "plugin": "janus.plugin.videoroom",
+      "data": {
+         "videoroom": "event",
+         "room": 6396358082954599993,
+         "configured": "ok",
+         "audio_codec": "opus",
+         "video_codec": "vp8",
+         "streams": [
+            {
+               "type": "audio",
+               "mindex": 0,
+               "mid": "0",
+               "codec": "opus",
+               "opus-fec": true
+            },
+            {
+               "type": "video",
+               "mindex": 1,
+               "mid": "1",
+               "codec": "vp8"
+            },
+            {
+               "type": "data",
+               "mindex": 2,
+               "mid": "2"
+            },
+            ...
+         ]
+      }
+   },
+   "jsep": {
+      "type": "answer",
+      "sdp": "..."
+   }
+}
+end note
+
+Client -> Janus: ice candidate
+note over Client
+ice candidate not necessarily sent in the end
+end note
+
+note left
+{
+    "candidates": [
+        {
+            "sdpMid": "0",
+            "sdpMLineIndex": 0,
+            "candidate": "..."
+        },
+        ...
+    ],
+    "handle_id": 6704225601631970,
+    "janus": "trickle",
+    "session_id": 2174136358864575,
+    "transaction": "27uU22Y6EXinV3sqfNo7KxkC45b"
+}
+end note
+return ack
+
+note over Client, Janus #lightblue
+After ice candidates sent back and forth, if the connection
+is successful then these below event will triggered to notify
+that webrtc communication is flowing
+end note
+
+Janus --> Client: **event** webrtcup
+note right
+{
+   "janus": "webrtcup",
+   "session_id": 2174136358864575,
+   "sender": 6704225601631970
+}
+end note
+
+Janus --> Client: **event** media video up
+note right
+{
+   "janus": "media",
+   "session_id": 2174136358864575,
+   "sender": 6704225601631970,
+   "mid": "1",
+   "type": "video",
+   "receiving": true
+},
+end note
+
+Janus --> Client: **event** media audio up
+note right
+{
+   "janus": "media",
+   "session_id": 2174136358864575,
+   "sender": 6704225601631970,
+   "mid": "0",
+   "type": "audio",
+   "receiving": true
+}
+end note
+
+== end session ==
+
+Client -> Janus: detach videoroom plugin
+activate Janus
+note left
+{
+    "handle_id": 6704225601631970,
+    "janus": "detach",
+    "session_id": 2174136358864575,
+    "transaction": "27uU2fT6UT6zOgVe0pIt4UDEzNG"
+}
+end note
+return success
+
+Janus --> Client: **event** successfully detached
+note right
+{
+   "janus": "detached",
+   "session_id": 2174136358864575,
+   "sender": 6704225601631970
+}
+end note
+
+
+@enduml

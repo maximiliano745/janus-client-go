@@ -71,9 +71,12 @@ type UpdatedEventMsg struct {
 }
 
 type Subscriber struct {
-	ctx            context.Context
-	handle         *janus.Handle
-	roomID         int64
+	ctx    context.Context
+	handle *janus.Handle
+	roomID int64
+
+	// OnUpdatedEvent called when renegotiation is needed,
+	// such as when publishers webrtc connection gone (disconnected)
 	OnUpdatedEvent func(msg UpdatedEventMsg)
 }
 
@@ -283,6 +286,10 @@ func (s *Subscriber) eventLoop() {
 				_ = json.Unmarshal(msg.PluginData.Data, &videoRoomMsg)
 
 				if videoRoomMsg.IsVideoRoomEvent("updated") {
+					// kalau "updated" event ini memiliki jsep maka itu harus diterima client untuk direnegotiate
+					// dan mengirimkan kembali sdp answer ke janus didalam request "start"
+					// jika tidak maka statenya akan menggantung, tidak bisa "subscribe"/"unsubscribe" (request lain
+					// yang berhubungan dengan negosiasi sdp)
 					updatedMsg := UpdatedEventMsg{}
 					_ = json.Unmarshal(msg.PluginData.Data, &updatedMsg)
 					updatedMsg.JSEP = msg.JSEP
