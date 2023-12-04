@@ -4,8 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/abdularis/janus-client-go/janus"
-	"github.com/abdularis/janus-client-go/janus/videoroom"
+	"github.com/maximiliano745/janus-client-go/janus"
+	"github.com/maximiliano745/janus-client-go/janus/videoroom"
+
+	//"github.com/maximiliano745/janus-client-go/sample/videoroom-publisher"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )

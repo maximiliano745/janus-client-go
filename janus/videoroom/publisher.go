@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/abdularis/janus-client-go/janus"
+
+	"github.com/maximiliano745/janus-client-go/janus"
 	"github.com/rs/zerolog/log"
 )
 
@@ -151,14 +152,15 @@ func (p *Publisher) Handle() *janus.Handle {
 
 // Join send join request, with the following:
 // request data
-// {
-//   "request" : "join",
-//   "ptype" : "publisher",
-//   "room" : <unique ID of the room to join>,
-//   "id" : <unique ID to register for the publisher; optional, will be chosen by the plugin if missing>,
-//   "display" : "<display name for the publisher; optional>",
-//   "token" : "<invitation token, in case the room has an ACL; optional>"
-// }
+//
+//	{
+//	  "request" : "join",
+//	  "ptype" : "publisher",
+//	  "room" : <unique ID of the room to join>,
+//	  "id" : <unique ID to register for the publisher; optional, will be chosen by the plugin if missing>,
+//	  "display" : "<display name for the publisher; optional>",
+//	  "token" : "<invitation token, in case the room has an ACL; optional>"
+//	}
 func (p *Publisher) Join(config PublisherJoinConfig) error {
 	req := map[string]interface{}{}
 	for k, v := range config {

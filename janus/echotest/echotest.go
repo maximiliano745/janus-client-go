@@ -1,7 +1,7 @@
 package echotest
 
 import (
-	"github.com/abdularis/janus-client-go/janus"
+	"github.com/maximiliano745/janus-client-go/janus"
 )
 
 const PackageName = "janus.plugin.echotest"

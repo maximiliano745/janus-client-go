@@ -1,4 +1,4 @@
-module github.com/abdularis/janus-client-go
+module github.com/maximiliano745/janus-client-go
 
 go 1.17
 

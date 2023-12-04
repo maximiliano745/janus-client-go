@@ -3,7 +3,8 @@ package videoroom
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/abdularis/janus-client-go/janus"
+
+	"github.com/maximiliano745/janus-client-go/janus"
 )
 
 const PackageName = "janus.plugin.videoroom"

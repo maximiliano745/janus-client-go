@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/abdularis/janus-client-go/janus"
+
+	"github.com/maximiliano745/janus-client-go/janus"
 	"github.com/rs/zerolog/log"
 )
 

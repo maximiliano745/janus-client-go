@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/abdularis/janus-client-go/janus"
-	"github.com/abdularis/janus-client-go/janus/videoroom"
+	"io"
+	"os"
+	"time"
+
+	"github.com/maximiliano745/janus-client-go/janus"
+	"github.com/maximiliano745/janus-client-go/janus/videoroom"
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/pion/webrtc/v3/pkg/media/ivfreader"
 	"github.com/pion/webrtc/v3/pkg/media/oggreader"
 	"github.com/rs/zerolog/log"
-	"io"
-	"os"
-	"time"
 )
 
 const (
@@ -24,9 +25,7 @@ type LocalWebRTCAgent struct {
 	videoFileName string
 }
 
-func NewLocalWebRTCAgent(
-	audioFileName string,
-	videoFileName string) *LocalWebRTCAgent {
+func NewLocalWebRTCAgent(audioFileName string, videoFileName string) *LocalWebRTCAgent {
 	return &LocalWebRTCAgent{
 		audioFileName: audioFileName,
 		videoFileName: videoFileName,
