@@ -7,7 +7,9 @@ import (
 	"github.com/maximiliano745/janus-client-go/janus"
 	"github.com/maximiliano745/janus-client-go/janus/videoroom"
 
+	//"github.com/maximiliano745/janus-client-go/sample"
 	//"github.com/maximiliano745/janus-client-go/sample/videoroom-publisher"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -58,6 +60,8 @@ func main() {
 
 	publisher := videoroom.NewPublisher(context.Background(), handle, roomID)
 
-	wrtc := NewLocalWebRTCAgent("./sample/sample-video-scenery.ogg", "./sample/sample-video-scenery.ivf")
+	//wrtc := NewLocalWebRTCAgent("./sample/sample-video-scenery.ogg", "./sample/sample-video-scenery.ivf")
+	wrtc := NewLocalWebRTCAgent("./sample/SampleVideo_1280x720_20mb.mp4", "./sample/sample_files_for_pages_file_example_OGG_480_1_7mg.ogg")
+
 	wrtc.Start(publisher, roomID)
 }
