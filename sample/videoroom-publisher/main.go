@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"time"
 
 	"github.com/maximiliano745/janus-client-go/janus"
@@ -58,10 +57,10 @@ func main() {
 		}
 	}
 
-	publisher := videoroom.NewPublisher(context.Background(), handle, roomID)
+	//publisher := videoroom.NewPublisher(context.Background(), handle, roomID)
 
 	//wrtc := NewLocalWebRTCAgent("./sample/sample-video-scenery.ogg", "./sample/sample-video-scenery.ivf")
-	wrtc := NewLocalWebRTCAgent("./sample/SampleVideo_1280x720_20mb.mp4", "./sample/sample_files_for_pages_file_example_OGG_480_1_7mg.ogg")
+	//wrtc := NewLocalWebRTCAgent("./sample/SampleVideo_1280x720_20mb.mp4", "./sample/sample_files_for_pages_file_example_OGG_480_1_7mg.ogg")
 
-	wrtc.Start(publisher, roomID)
+	//wrtc.Start(publisher, roomID)
 }
